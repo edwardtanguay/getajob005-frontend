@@ -63,9 +63,23 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 		setTotaledSkills([...totaledSkills]);
 	};
 
-	const handleDeleteJob = (job: Job) => {
-		console.log('deleting id ' + job.id)
-	}
+	const handleDeleteJob = async (job: Job) => {
+		try {
+			const res = await axios.delete(`${backendUrl}/job/${job.id}`);
+			if (res.status = 200) {
+				const _jobs = jobs.filter((m: Job) => m.id !== job.id);
+				setJobs([..._jobs]);
+			} else {
+				console.log(res)
+			}
+		} catch (e: any) {
+			console.error(`ERROR: ${e.message}`);
+			const message = e.response.data.message;
+			if (message) {
+				console.error(`ERROR: ${message}`);
+			}
+		}
+	};
 
 	return (
 		<AppContext.Provider
@@ -74,7 +88,7 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 				todos,
 				totaledSkills,
 				handleToggleTotaledSkill,
-				handleDeleteJob
+				handleDeleteJob,
 			}}
 		>
 			{children}
