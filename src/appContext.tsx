@@ -23,38 +23,52 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 	const [todos, setTodos] = useState<Todo[]>([]);
 	const [totaledSkills, setTotaledSkills] = useState<TotaledSkill[]>([]);
 
-	useEffect(() => {
-		(async () => {
-			setJobs((await axios.get(`${backendUrl}/jobs`)).data);
-		})();
-	}, []);
+	const loadJobs = async () => {
+		setJobs((await axios.get(`${backendUrl}/jobs`)).data);
+	};
 
-	useEffect(() => {
+	const loadTodos = async () => {
 		(async () => {
 			const _todos = (await axios.get(`${backendUrl}/todos`)).data;
 			_todos.sort((a: Todo, b: Todo) => a.todoText > b.todoText);
 			setTodos(_todos);
 		})();
+	};
+
+	const loadTotaledSkills = async () => {
+		const _totaledSkills: TotaledSkill[] = (
+			await axios.get(`${backendUrl}/totaledSkills`)
+		).data;
+		_totaledSkills.sort(
+			(a: TotaledSkill, b: TotaledSkill) =>
+				Number(b.total) - Number(a.total)
+		);
+		_totaledSkills.forEach((_totaledSkill) => {
+			_totaledSkill.isOpen = false;
+			if (_totaledSkill.skill.name) {
+				_totaledSkill.lookupInfoLink = `https://www.google.com/search?client=firefox-b-d&q=web+development+${_totaledSkill.skill.name}`;
+			} else {
+				_totaledSkill.lookupInfoLink = `https://www.google.com/search?client=firefox-b-d&q=web+development+${_totaledSkill.skill.idCode}`;
+			}
+		});
+		setTotaledSkills(_totaledSkills);
+	};
+
+	useEffect(() => {
+		(async () => {
+			await loadJobs();
+		})();
 	}, []);
 
 	useEffect(() => {
 		(async () => {
-			const _totaledSkills: TotaledSkill[] = (
-				await axios.get(`${backendUrl}/totaledSkills`)
-			).data;
-			_totaledSkills.sort(
-				(a: TotaledSkill, b: TotaledSkill) =>
-					Number(b.total) - Number(a.total)
-			);
-			_totaledSkills.forEach((_totaledSkill) => {
-				_totaledSkill.isOpen = false;
-				if (_totaledSkill.skill.name) {
-					_totaledSkill.lookupInfoLink = `https://www.google.com/search?client=firefox-b-d&q=web+development+${_totaledSkill.skill.name}`;
-				} else {
-					_totaledSkill.lookupInfoLink = `https://www.google.com/search?client=firefox-b-d&q=web+development+${_totaledSkill.skill.idCode}`;
-				}
-			});
-			setTotaledSkills(_totaledSkills);
+			await loadTodos();
+		})();
+	}, []);
+
+	useEffect(() => {
+		(async () => {
+			await loadTotaledSkills();
 		})();
 	}, []);
 
@@ -66,11 +80,14 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 	const handleDeleteJob = async (job: Job) => {
 		try {
 			const res = await axios.delete(`${backendUrl}/job/${job.id}`);
-			if (res.status = 200) {
+			if ((res.status = 200)) {
 				const _jobs = jobs.filter((m: Job) => m.id !== job.id);
 				setJobs([..._jobs]);
+				await loadJobs();
+				await loadTodos();
+				await loadTotaledSkills();
 			} else {
-				console.log(res)
+				console.error(res);
 			}
 		} catch (e: any) {
 			console.error(`ERROR: ${e.message}`);
