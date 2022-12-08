@@ -8,6 +8,7 @@ interface IAppContext {
 	todos: Todo[];
 	totaledSkills: TotaledSkill[];
 	handleToggleTotaledSkill: (totaledSkill: TotaledSkill) => void;
+	handleDeleteJob: (job: Job) => void;
 }
 
 interface IAppProvider {
@@ -61,6 +62,11 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 		totaledSkill.isOpen = !totaledSkill.isOpen;
 		setTotaledSkills([...totaledSkills]);
 	};
+
+	const handleDeleteJob = (job: Job) => {
+		console.log('deleting id ' + job.id)
+	}
+
 	return (
 		<AppContext.Provider
 			value={{
@@ -68,6 +74,7 @@ export const AppProvider: React.FC<IAppProvider> = ({ children }) => {
 				todos,
 				totaledSkills,
 				handleToggleTotaledSkill,
+				handleDeleteJob
 			}}
 		>
 			{children}
